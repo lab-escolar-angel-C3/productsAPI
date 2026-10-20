@@ -6,6 +6,7 @@ import mx.edu.utez.angel.products.dto.ProductRequest;
 import mx.edu.utez.angel.products.dto.ProductResponse;
 import mx.edu.utez.angel.products.entity.Category;
 import mx.edu.utez.angel.products.entity.Product;
+import mx.edu.utez.angel.products.exception.StockOperationException;
 import mx.edu.utez.angel.products.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,6 +65,26 @@ public class ProductService {
             existing.setStock(request.getStock());
             existing.setPrecio(request.getPrecio());
             return mapToResponse(repository.save(existing));
+        });
+    }
+
+    public Optional<ProductResponse> addStock(Long id, Integer quantity) {
+        return repository.findById(id).map(product -> {
+            if (quantity > Integer.MAX_VALUE - product.getStock()) {
+                throw new StockOperationException("La cantidad excede el máximo de stock permitido");
+            }
+            product.setStock(product.getStock() + quantity);
+            return mapToResponse(repository.save(product));
+        });
+    }
+
+    public Optional<ProductResponse> removeStock(Long id, Integer quantity) {
+        return repository.findById(id).map(product -> {
+            if (quantity > product.getStock()) {
+                throw new StockOperationException("No hay suficiente stock para quitar esa cantidad");
+            }
+            product.setStock(product.getStock() - quantity);
+            return mapToResponse(repository.save(product));
         });
     }
 

@@ -2,8 +2,10 @@ package mx.edu.utez.angel.products.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import mx.edu.utez.angel.products.dto.AddStockRequest;
 import mx.edu.utez.angel.products.dto.ProductRequest;
 import mx.edu.utez.angel.products.dto.ProductResponse;
+import mx.edu.utez.angel.products.dto.RemoveStockRequest;
 import mx.edu.utez.angel.products.entity.Category;
 import mx.edu.utez.angel.products.service.ProductService;
 import org.springframework.http.HttpStatus;
@@ -51,6 +53,24 @@ public class ProductController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/products/{id}/stock/add")
+    public ResponseEntity<?> addStock(
+            @PathVariable Long id,
+            @Valid @RequestBody AddStockRequest request) {
+        return service.addStock(id, request.add())
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/products/{id}/stock/remove")
+    public ResponseEntity<?> removeStock(
+            @PathVariable Long id,
+            @Valid @RequestBody RemoveStockRequest request) {
+        return service.removeStock(id, request.remove())
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/categories")

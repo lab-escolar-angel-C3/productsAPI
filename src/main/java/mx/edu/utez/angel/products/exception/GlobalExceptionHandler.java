@@ -1,26 +1,30 @@
 package mx.edu.utez.angel.products.exception;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> manejarErroresDeValidacion(MethodArgumentNotValidException ex) {
-        Map<String, String> errores = new HashMap<>();
+    public ResponseEntity<Map<String, String>> manejarErroresDeValidacion(
+            MethodArgumentNotValidException ex) {
+        String errores = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining("; "));
 
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errores.put(error.getField(), error.getDefaultMessage())
-        );
+        return ResponseEntity.badRequest().body(Map.of("error", errores));
+    }
 
-        return errores;
+    @ExceptionHandler(StockOperationException.class)
+    public ResponseEntity<Map<String, String>> manejarErrorDeStock(StockOperationException ex) {
+        return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
     }
 }
